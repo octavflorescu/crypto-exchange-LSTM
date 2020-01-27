@@ -1,0 +1,15 @@
+Deep transfer with related stock information (DTRSI) to predict stock price movement, to mitigate the
+overfitting problem caused by an insufficient number of training samples, and to improve prediction
+performance by using the relationships between stocks.  Specifically, our framework has two phases.
+First, a base model using LSTM cells is pre-trained with a large amount of data (which were obtained
+from a number of different stocks) to optimize initial training parameters. Secondly, the base model is
+fine-tuned with a small amount of the target stock data to predict the target stock’s price movement.
+. In detail, we first calculate a one-day return, which shows the change of a stock’s closing price
+between two consecutive days. The first set of input features includes only one-day returns of the
+COI stock. The second set is the combination of one-day returns of COI stock and the index (e.g.,
+Korea Composite Stock Price Index 200 (KOSPI 200) and Standard&Poor’s 500 (S&P 500)). The third
+set is the combination of one-day returns of the COI stock, the index, and stocks related to the COI
+stock (i.e., the highest cosine similarity to the COI stock, similar field to the COI, and the highest
+market capitalization).
+/// A Novel Approach to Short-Term Stock Price Movement Prediction using Transfer Learning applsci-09-04745.pdf
+
