@@ -42,6 +42,7 @@ class CryptoDataset:
             self.df[[self.CLOSING_PRICE]])
         # remove last element since it is only used for creating the last prediction.
         self.df = self.df[:-predict_delta]
+        self.__append_methods_to_dataframe([self.TARGET_CLOSE_])
 
         # train_test_val split of ds. self.train_df, self.valid_df, self.test_df will contain the splitted data
         self.train_df, self.valid_df, self.test_df = [], [], []
@@ -56,8 +57,6 @@ class CryptoDataset:
         # random loading of train input, but constant loading of validation and test inputs for reproducible tests
         self.train_loader, self.val_loader, self.test_loader = [None for _ in range(3)]
         self.setup_data_loaders(sequence_size=sequence_size, batch_size=batch_size)
-
-        self.__append_methods_to_dataframe()
 
     # Public
 
