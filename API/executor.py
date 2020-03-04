@@ -6,6 +6,8 @@ from model import *
 
 class Executor:
     def __init__(self, prices_csv="BTC-ETH-filtered_with_indicators.csv", batch_size=32, seq_size=24):
+        self.batch_size = batch_size
+        self.seq_size = seq_size
         # Data load
         self.dataset = CryptoDataset(csv_file=prices_csv, predict_delta=1, batch_size=batch_size, sequence_size=seq_size)
         # If we have a GPU available, we'll set our device to GPU. We'll use this device variable later in our code.
@@ -100,10 +102,11 @@ class Executor:
     def load_model_from_file(self, load_from_file='./state_dict15c5.pt'):
         self.model.load_state_dict(torch.load(load_from_file))
 
-    def infer_torch(self, torch_tensor: torch.Tensor, load_from_file='./state_dict15c5.pt'):
+    def infer_torch(self, torch_tensor: torch.Tensor, load_from_file=None):
         if load_from_file:
             self.load_model_from_file(load_from_file=load_from_file)
         inference_input = torch_tensor.to(self.device)
+        self.model.eval()
         return self.model(inference_input)
 
     def infer(self, sequence:pd.DataFrame, load_from_file=None):
@@ -112,5 +115,15 @@ class Executor:
         sequence = self.dataset.normalize_data(data_to_normalize_to_train_data=sequence)
         torch_seq = torch.tensor(sequence.values.astype(np.float32))
         torch_seq = torch_seq.to(self.device)
+        self.model.eval()
         torch_out = self.model(torch_seq)
         return np.array(torch_out)
+
+if __name__ == "__main__":
+    # How to run inference
+    _exec = Executor()
+    # add another dimension for batch size (here, in inference : 1)
+    output = _exec.infer(np.expand_dims(pd.read_csv('BTC-ETH-filtered_with_indicators.csv')[-_exec.seq_size:], axis=0),
+                         load_from_file='./state_dict15c5.pt')
+
+    print(output)
