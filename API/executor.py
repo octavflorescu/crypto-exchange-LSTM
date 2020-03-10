@@ -6,6 +6,7 @@ from model import *
 
 class Executor:
     def __init__(self, prices_csv="BTC-ETH-filtered_with_indicators.csv", batch_size=32, seq_size=24):
+        self.name = os.path.splitext(prices_csv)[0]
         self.batch_size = batch_size
         self.seq_size = seq_size
         # Data load
@@ -22,19 +23,21 @@ class Executor:
         # torch.cuda.is_available() checks and returns a Boolean True if a GPU is available, else it'll return False
         return torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    def train(self):
-        lr = 0.0003
+    def train(self, lr=0.0003, epochs=300, with_plot=False):
+        if with_plot:
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(1,1)
+            ax.set_xlabel('epochs')
+            ax.set_ylabel('losses')
+        
+        clip = 5
+        train_losses, valid_losses = [], []
+        valid_loss_min = np.Inf
         criterion = nn.L1Loss()
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
-        epochs = 300
-        counter = 0
-        print_every = 5
-        clip = 5
-        valid_loss_min = np.Inf
         lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=lr,
                                                            steps_per_epoch=len(self.dataset.train_loader),
                                                            epochs=epochs)
-        train_losses, valid_losses = [], []
 
         def train():
             self.model.train()
@@ -59,7 +62,7 @@ class Executor:
 
         def eval_and_save(on_epoch=0):
             self.model.eval()
-            global valid_loss_min
+            nonlocal valid_loss_min
 
             # evaluate first the full train set
             epoch_train_losses = []
@@ -89,11 +92,19 @@ class Executor:
                   "Loss: {:.6f}...".format(avg_epoch_train_loss),
                   "Val Loss: {:.6f}".format(avg_epoch_val_loss))
             if avg_epoch_val_loss < valid_loss_min:
-                torch.save(self.model.state_dict(), f'{os.path.splitext(prices_csv)[0]}.pt')
+                torch.save(self.model.state_dict(), f'{self.name}.pt')
                 print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(valid_loss_min,
                                                                                                 avg_epoch_val_loss))
                 valid_loss_min = avg_epoch_val_loss
 
+            nonlocal with_plot
+            if with_plot:
+                plt.cla()
+                ax.plot(train_losses, 'b', label='train_loss')
+                ax.plot(valid_losses, 'r', label='valid_loss')
+                ax.legend()
+                fig.canvas.draw()
+                
         # Train, eval and save
         for epoch in range(epochs):
             train()
@@ -113,7 +124,7 @@ class Executor:
         if load_from_file:
             self.load_model_from_file(load_from_file=load_from_file)
         sequence = self.dataset.normalize_data(data_to_normalize_to_train_data=sequence)
-        torch_seq = torch.tensor(sequence.values.astype(np.float32))
+        torch_seq = torch.tensor(np.expand_dims(sequence.values.astype(np.float32), axis=0))
         torch_seq = torch_seq.to(self.device)
         self.model.eval()
         torch_out = self.model(torch_seq)

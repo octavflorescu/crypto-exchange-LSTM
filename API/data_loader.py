@@ -1,3 +1,4 @@
+from copy import deepcopy
 import fastai.tabular as fast_tabular
 import numpy as np
 import pandas as pd
@@ -34,7 +35,10 @@ class CryptoDataset:
                               parse_dates=[self.DATE_COLUMN_NAME],
                               date_parser=lambda x: datetime.fromtimestamp(int(x)),
                               )
+        ### SETUP FOR GIVEN INPUT DATA
+        # add the dateparts
         fast_tabular.add_datepart(self.df, self.DATE_COLUMN_NAME, time=True)
+        # drop useless dateparts
         self.df = self.df.drop(columns=self.DROP_COLUMNS)
 
         # building the target
@@ -42,7 +46,7 @@ class CryptoDataset:
             self.df[[self.CLOSING_PRICE]])
         # remove last element since it is only used for creating the last prediction.
         self.df = self.df[:-predict_delta]
-        self.__append_methods_to_dataframe([self.TARGET_CLOSE_])
+        self.__append_methods_to_dataframe(targets_names_list=[self.TARGET_CLOSE_])
 
         # train_test_val split of ds. self.train_df, self.valid_df, self.test_df will contain the splitted data
         self.train_df, self.valid_df, self.test_df = [], [], []
@@ -61,9 +65,18 @@ class CryptoDataset:
     # Public
 
     def normalize_data(self, data_to_normalize_to_train_data: pd.DataFrame):
+        data_to_normalize_to_train_data = deepcopy(data_to_normalize_to_train_data)
+        
+        # add the dateparts
+        fast_tabular.add_datepart(data_to_normalize_to_train_data, self.DATE_COLUMN_NAME, time=True)
+        # drop useless dateparts
+        data_to_normalize_to_train_data.drop(columns=self.DROP_COLUMNS, inplace=True)
+        
+        # cleanup the data, normalize using train set, clip outliers
         columns = self.preprocessing_pipeline["poli-feature"].get_feature_names(self.train_df.input_data().columns)
         data_to_normalize_to_train_data = self.__transform_df(data_to_normalize_to_train_data.input_data(),
                                                               self.preprocessing_pipeline, columns=columns)
+        
         data_to_normalize_to_train_data.drop(columns=['1'], inplace=True)
         return data_to_normalize_to_train_data
 
@@ -81,7 +94,7 @@ class CryptoDataset:
 
     def __append_methods_to_dataframe(self, targets_names_list=['next_closing_price']):
         def input_data(self: pd.DataFrame):
-            return self.drop(columns=['fake', 'volume_em', *targets_names_list])
+            return self.drop(columns=self.columns.intersection(['fake', 'volume_em', *targets_names_list]))
 
         pd.DataFrame.input_data = input_data
 
