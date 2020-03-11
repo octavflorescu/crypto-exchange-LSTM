@@ -5,7 +5,7 @@ from model import *
 
 
 class Executor:
-    def __init__(self, prices_csv="BTC-ETH-filtered_with_indicators.csv", batch_size=32, seq_size=24):
+    def __init__(self, train_csv="BTC-ETH-filtered_with_indicators.csv", batch_size=32, seq_size=24):
         self.name = os.path.splitext(prices_csv)[0]
         self.batch_size = batch_size
         self.seq_size = seq_size
@@ -133,8 +133,14 @@ class Executor:
 if __name__ == "__main__":
     # How to run inference
     _exec = Executor()
-    # add another dimension for batch size (here, in inference : 1)
-    output = _exec.infer(np.expand_dims(pd.read_csv('BTC-ETH-filtered_with_indicators.csv')[-_exec.seq_size:], axis=0),
-                         load_from_file='./state_dict15c5.pt')
+
+    #train
+    # import matplotlib.pyplot as plt
+    # _exec.train(with_plot=True)
+
+    #infer
+    sequence_to_infer = pd.read_csv('BTC-ETH-filtered_with_indicators.csv')[-_exec.seq_size:]
+    output = _exec.infer(sequence_to_infer,
+                         load_from_file='./BTC-ETH-filtered_with_indicators.pt')
 
     print(output)

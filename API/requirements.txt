@@ -1,0 +1,4 @@
+pytorch
+fastai==1.0.55
+sklearn
+flask
