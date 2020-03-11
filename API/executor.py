@@ -6,11 +6,11 @@ from model import *
 
 class Executor:
     def __init__(self, train_csv="BTC-ETH-filtered_with_indicators.csv", batch_size=32, seq_size=24):
-        self.name = os.path.splitext(prices_csv)[0]
+        self.name = os.path.splitext(train_csv)[0]
         self.batch_size = batch_size
         self.seq_size = seq_size
         # Data load
-        self.dataset = CryptoDataset(csv_file=prices_csv, predict_delta=1, batch_size=batch_size, sequence_size=seq_size)
+        self.dataset = CryptoDataset(csv_file=train_csv, predict_delta=1, batch_size=batch_size, sequence_size=seq_size)
         # If we have a GPU available, we'll set our device to GPU. We'll use this device variable later in our code.
         self.device = self.get_available_device()
         self.features_count = self.dataset.train_data.shape[1]

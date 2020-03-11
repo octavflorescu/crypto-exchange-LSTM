@@ -3,16 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>uRwilcomen</title>
+</head>
+<body>
     <h1>send post req to train_predict</h1>
     <p>
         If trainer is already trained on the named data (pandas df as csv) but uniquely identified by caller
         It uses the existing trained model with the same name to infer on the posted data
-
+    </p>
+    <p>
         request.files: the files in the body, which Flask keeps separate from form.
         HTML forms must use enctype=multipart/form-data or files will not be uploaded.
     </p>
-</head>
-<body>
-
+    <p>
+        Header args:<br>
+        force_retrain = Defaults to NO. If enabled, it will overwrite the previous training of the same train file<br>
+        epochs = Defaults to 10. If set, will train for given epochs. But only if needed or forced.
+    </p>
+    <br>
+    <img src="/static/Postman.png" alt="Postman e.g." width="50%">
 </body>
 </html>
