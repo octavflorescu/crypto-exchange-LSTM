@@ -1,2 +1,4 @@
 API/__pycache__/*
 API/.idea/*
+.idea/*
+.ipynb_checkpoints/*
